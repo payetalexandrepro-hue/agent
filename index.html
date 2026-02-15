@@ -78,25 +78,22 @@
     Support technique · Interventions
   </footer>
 
-  <script type="text/javascript">
-    (function(d, t) {
+<script type="text/javascript">
+  (function(d, t) {
       var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
       v.onload = function() {
         window.voiceflow.chat.load({
-          verify: { projectID: '69750a598edaead75a661949' },
+          verify: { projectID: '698e23a65b76a37297e3f819' },
           url: 'https://general-runtime.voiceflow.com',
           versionID: 'production',
-          render: {
-            mode: 'embedded',
-            target: document.getElementById('voiceflow-chat')
+          voice: {
+            url: "https://runtime-api.voiceflow.com"
           }
         });
-      };
-      v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs";
-      v.type = "text/javascript";
-      s.parentNode.insertBefore(v, s);
-    })(document, 'script');
-  </script>
+      }
+      v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs"; v.type = "text/javascript"; s.parentNode.insertBefore(v, s);
+  })(document, 'script');
+</script>
 
 </body>
 </html>
