@@ -14,25 +14,28 @@
     @media (max-width: 768px) { main { padding: 0; } .chat-container { height: 100%; max-width: 100%; border-radius: 0; } }
     
     .vfrc-extension-form { padding: 15px; background-color: #fff; max-height: 550px; overflow-y: auto; }
-    .control-item { background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e2e8f0; }
+    .control-item { background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
     
-    /* Styles des boutons de sélection */
-    .status-group { display: flex; gap: 10px; margin: 8px 0; }
-    .status-label { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center; cursor: pointer; font-size: 0.85em; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px; background: white; }
+    /* Affichage en colonne pour les options */
+    .status-group { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+    .status-label { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-size: 0.9em; transition: 0.2s; display: flex; align-items: center; gap: 10px; background: white; }
     
     input[type="radio"] { display: none; }
     
-    /* Conforme - Vert avec coche */
+    /* Styles de sélection */
     input[value="C"]:checked + .status-label { background: #dcfce7; border-color: #22c55e; color: #166534; font-weight: bold; }
-    input[value="C"]:checked + .status-label::before { content: "✓"; }
+    input[value="C"]:checked + .status-label::before { content: "✓"; font-weight: bold; }
     
-    /* Non Conforme - Rouge avec croix */
     input[value="NC"]:checked + .status-label { background: #fee2e2; border-color: #ef4444; color: #991b1b; font-weight: bold; }
-    input[value="NC"]:checked + .status-label::before { content: "✗"; }
+    input[value="NC"]:checked + .status-label::before { content: "✗"; font-weight: bold; }
     
-    .extra-fields { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
-    .extra-fields input[type="file"] { font-size: 0.75em; color: #475569; }
-    .extra-fields textarea { width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 0.8em; resize: vertical; }
+    /* Champs additionnels toute largeur */
+    .extra-fields { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid #e2e8f0; padding-top: 12px; }
+    
+    .photo-button { position: relative; overflow: hidden; display: inline-block; background: #64748b; color: white; padding: 8px 12px; border-radius: 6px; font-size: 0.85em; text-align: center; cursor: pointer; }
+    .photo-button input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    
+    .extra-fields textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; resize: vertical; min-height: 80px; }
   </style>
 </head>
 <body>
@@ -65,27 +68,30 @@
         const item = document.createElement('div');
         item.className = 'control-item';
         item.innerHTML = `
-          <div style="font-size:0.9em; font-weight:600; color:#334155;">${control}</div>
+          <div style="font-size:1em; font-weight:600; color:#1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">${control}</div>
           <div class="status-group">
-            <label style="flex:1;">
+            <label>
               <input type="radio" name="status-${control}" value="C">
               <div class="status-label">Conforme</div>
             </label>
-            <label style="flex:1;">
+            <label>
               <input type="radio" name="status-${control}" value="NC">
               <div class="status-label">Non conforme</div>
             </label>
           </div>
           <div class="extra-fields">
-            <input type="file" accept="image/*" capture="environment" id="photo-${control}">
-            <textarea id="comm-${control}" placeholder="Commentaire optionnel..." rows="1"></textarea>
+            <div class="photo-button">
+              📷 Prendre une photo
+              <input type="file" accept="image/*" capture="environment" id="photo-${control}">
+            </div>
+            <textarea id="comm-${control}" placeholder="Décrivez l'état ou le problème rencontré..." rows="3"></textarea>
           </div>`;
         formContainer.appendChild(item);
       });
 
       const btn = document.createElement('button');
       btn.innerText = "Soumettre le rapport complet";
-      btn.style = "background:#f59e0b; color:white; border:none; padding:12px; width:100%; border-radius:8px; cursor:pointer; margin-top:15px; font-weight:600;";
+      btn.style = "background:#f59e0b; color:white; border:none; padding:15px; width:100%; border-radius:8px; cursor:pointer; margin-top:10px; font-weight:700; font-size:1em; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);";
       
       btn.onclick = () => {
         const finalData = [];
@@ -93,12 +99,11 @@
             const ctrl = record.fields.Contrôle;
             const status = formContainer.querySelector(`input[name="status-${ctrl}"]:checked`)?.value || "Non renseigné";
             const comment = document.getElementById(`comm-${ctrl}`).value;
-            // Note: Les fichiers réels nécessitent un traitement spécifique pour l'envoi, ici on passe le statut et texte.
             finalData.push({ contrôle: ctrl, résultat: status, commentaire: comment });
         });
 
         btn.disabled = true;
-        btn.innerText = "Transmission en cours...";
+        btn.innerText = "Envoi en cours...";
         window.voiceflow.chat.interact({ type: 'complete', payload: { data: finalData } });
       };
       
@@ -123,3 +128,4 @@
 </script>
 </body>
 </html>
+
