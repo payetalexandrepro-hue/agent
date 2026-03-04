@@ -4,96 +4,43 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Assistant Interventions - DIP ASCENSEURS</title>
-
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-
-    body {
-      background: #f5f6fa;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    header {
-      background: #0f172a;
-      color: white;
-      padding: 14px 16px;
-      text-align: center;
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    main {
-      flex: 1;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    /* Conteneur Responsive */
-    .chat-container {
-      width: 100%;
-      max-width: 1000px; /* Plus large sur PC */
-      height: 85vh;      /* Hauteur dynamique */
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      position: relative;
-      overflow: hidden;
-    }
-
-    footer {
-      text-align: center;
-      padding: 10px;
-      font-size: 12px;
-      color: #6b7280;
-    }
-
-    /* Adaptation Mobile */
-    @media (max-width: 768px) {
-      main {
-        padding: 0;
-      }
-      .chat-container {
-        height: 100%;
-        max-width: 100%;
-        border-radius: 0;
-      }
-      header {
-        font-size: 16px;
-      }
-    }
-
-    .vfrc-extension-form {
-      padding: 15px;
-      background-color: #fff;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #f5f6fa; min-height: 100vh; display: flex; flex-direction: column; }
+    header { background: #0f172a; color: white; padding: 14px 16px; text-align: center; font-size: 18px; font-weight: 600; }
+    main { flex: 1; padding: 20px; display: flex; justify-content: center; align-items: center; }
+    .chat-container { width: 100%; max-width: 1000px; height: 85vh; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
+    footer { text-align: center; padding: 10px; font-size: 12px; color: #6b7280; }
+    @media (max-width: 768px) { main { padding: 0; } .chat-container { height: 100%; max-width: 100%; border-radius: 0; } }
+    
+    .vfrc-extension-form { padding: 15px; background-color: #fff; max-height: 550px; overflow-y: auto; }
+    .control-item { background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e2e8f0; }
+    
+    /* Styles des boutons de sélection */
+    .status-group { display: flex; gap: 10px; margin: 8px 0; }
+    .status-label { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center; cursor: pointer; font-size: 0.85em; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px; background: white; }
+    
+    input[type="radio"] { display: none; }
+    
+    /* Conforme - Vert avec coche */
+    input[value="C"]:checked + .status-label { background: #dcfce7; border-color: #22c55e; color: #166534; font-weight: bold; }
+    input[value="C"]:checked + .status-label::before { content: "✓"; }
+    
+    /* Non Conforme - Rouge avec croix */
+    input[value="NC"]:checked + .status-label { background: #fee2e2; border-color: #ef4444; color: #991b1b; font-weight: bold; }
+    input[value="NC"]:checked + .status-label::before { content: "✗"; }
+    
+    .extra-fields { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .extra-fields input[type="file"] { font-size: 0.75em; color: #475569; }
+    .extra-fields textarea { width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 0.8em; resize: vertical; }
   </style>
 </head>
-
 <body>
-
-  <header>
-    Assistant Interventions - DIP ASCENSEURS
-  </header>
-
-  <main>
-    <div class="chat-container" id="voiceflow-chat"></div>
-  </main>
-
-  <footer>
-    Support technique · DIP Ascenseurs, Fermetures et Mobilité
-  </footer>
+  <header>Assistant Interventions - DIP ASCENSEURS</header>
+  <main><div class="chat-container" id="voiceflow-chat"></div></main>
+  <footer>Support technique · DIP Ascenseurs</footer>
 
 <script type="text/javascript">
-  // Extension Airtable
   const AirtableFormExtension = {
     name: 'Airtable_Inspection_Form',
     type: 'response',
@@ -109,46 +56,50 @@
       });
       const data = await response.json();
 
-      const groups = data.records.reduce((acc, record) => {
-        const pt = record.fields.Point_de_contrôle || "Général";
-        if (!acc[pt]) acc[pt] = [];
-        acc[pt].push(record.fields.Contrôle);
-        return acc;
-      }, {});
-
       const formContainer = document.createElement('div');
       formContainer.className = 'vfrc-extension-form';
-      formContainer.innerHTML = `<h4 style="margin-bottom:12px; color:#0f172a;">📝 Rapport de visite ${typeFiltre}</h4>`;
+      formContainer.innerHTML = `<h4 style="margin-bottom:15px; color:#0f172a;">📝 Rapport de visite ${typeFiltre}</h4>`;
 
-      Object.keys(groups).forEach(groupName => {
-        const groupDiv = document.createElement('div');
-        groupDiv.innerHTML = `<div style="font-weight:bold; color:#f59e0b; margin: 15px 0 8px 0; font-size:0.9em; text-transform:uppercase;">${groupName}</div>`;
-        
-        groups[groupName].forEach(control => {
-          const item = document.createElement('div');
-          item.style = "background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:8px; border: 1px solid #e2e8f0;";
-          item.innerHTML = `
-            <div style="font-size:0.85em; margin-bottom:6px; color:#334155;">${control}</div>
-            <div style="display:flex; gap:20px;">
-              <label style="font-size:0.8em; cursor:pointer;"><input type="radio" name="${control}" value="C"> Conforme</label>
-              <label style="font-size:0.8em; cursor:pointer;"><input type="radio" name="${control}" value="NC"> Non conforme</label>
-            </div>`;
-          groupDiv.appendChild(item);
-        });
-        formContainer.appendChild(groupDiv);
+      data.records.forEach(record => {
+        const control = record.fields.Contrôle;
+        const item = document.createElement('div');
+        item.className = 'control-item';
+        item.innerHTML = `
+          <div style="font-size:0.9em; font-weight:600; color:#334155;">${control}</div>
+          <div class="status-group">
+            <label style="flex:1;">
+              <input type="radio" name="status-${control}" value="C">
+              <div class="status-label">Conforme</div>
+            </label>
+            <label style="flex:1;">
+              <input type="radio" name="status-${control}" value="NC">
+              <div class="status-label">Non conforme</div>
+            </label>
+          </div>
+          <div class="extra-fields">
+            <input type="file" accept="image/*" capture="environment" id="photo-${control}">
+            <textarea id="comm-${control}" placeholder="Commentaire optionnel..." rows="1"></textarea>
+          </div>`;
+        formContainer.appendChild(item);
       });
 
       const btn = document.createElement('button');
-      btn.innerText = "Soumettre le rapport d'intervention";
+      btn.innerText = "Soumettre le rapport complet";
       btn.style = "background:#f59e0b; color:white; border:none; padding:12px; width:100%; border-radius:8px; cursor:pointer; margin-top:15px; font-weight:600;";
       
       btn.onclick = () => {
-        btn.disabled = true;
-        btn.innerText = "Envoi en cours...";
-        window.voiceflow.chat.interact({ 
-          type: 'complete', 
-          payload: { status: 'Rapport envoyé', type: typeFiltre } 
+        const finalData = [];
+        data.records.forEach(record => {
+            const ctrl = record.fields.Contrôle;
+            const status = formContainer.querySelector(`input[name="status-${ctrl}"]:checked`)?.value || "Non renseigné";
+            const comment = document.getElementById(`comm-${ctrl}`).value;
+            // Note: Les fichiers réels nécessitent un traitement spécifique pour l'envoi, ici on passe le statut et texte.
+            finalData.push({ contrôle: ctrl, résultat: status, commentaire: comment });
         });
+
+        btn.disabled = true;
+        btn.innerText = "Transmission en cours...";
+        window.voiceflow.chat.interact({ type: 'complete', payload: { data: finalData } });
       };
       
       formContainer.appendChild(btn);
@@ -160,21 +111,4 @@
       var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
       v.onload = function() {
         window.voiceflow.chat.load({
-          verify: { projectID: '698e23a65b76a37297e3f819' },
-          url: 'https://general-runtime.voiceflow.com',
-          versionID: 'production',
-          render: {
-            mode: 'embedded',
-            target: document.getElementById('voiceflow-chat'),
-          },
-          assistant: {
-            extensions: [AirtableFormExtension]
-          }
-        });
-      }
-      v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs"; v.type = "text/javascript"; s.parentNode.insertBefore(v, s);
-  })(document, 'script');
-</script>
-
-</body>
-</html>
+          verify: { projectID: '698e23a65b76a37297
