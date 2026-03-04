@@ -59,5 +59,57 @@
           item.style = "background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:8px; border: 1px solid #e2e8f0;";
           item.innerHTML = `
             <div style="font-size:0.85em; margin-bottom:6px; color:#334155;">${control}</div>
-            <div style="display:flex
+            <div style="display:flex; gap:20px;">
+              <label style="font-size:0.8em; cursor:pointer;"><input type="radio" name="${control}" value="C"> Conforme</label>
+              <label style="font-size:0.8em; cursor:pointer;"><input type="radio" name="${control}" value="NC"> Non conforme</label>
+            </div>`;
+          groupDiv.appendChild(item);
+        });
+        formContainer.appendChild(groupDiv);
+      });
+
+      const btn = document.createElement('button');
+      btn.innerText = "Soumettre le rapport d'intervention";
+      btn.style = "background:#f59e0b; color:white; border:none; padding:12px; width:100%; border-radius:8px; cursor:pointer; margin-top:15px; font-weight:600;";
+      
+      btn.onclick = () => {
+        const results = {};
+        const selectedInputs = formContainer.querySelectorAll('input[type="radio"]:checked');
+        selectedInputs.forEach(input => {
+          results[input.name] = input.value;
+        });
+
+        btn.disabled = true;
+        btn.innerText = "Envoi en cours...";
+
+        window.voiceflow.chat.interact({ 
+          type: 'complete', 
+          payload: { 
+            message: "Rapport soumis", 
+            data: results 
+          } 
+        });
+      };
+      
+      formContainer.appendChild(btn);
+      element.appendChild(formContainer);
+    }
+  };
+
+  (function(d, t) {
+      var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
+      v.onload = function() {
+        window.voiceflow.chat.load({
+          verify: { projectID: '698e23a65b76a37297e3f819' },
+          url: 'https://general-runtime.voiceflow.com',
+          versionID: 'production',
+          render: { mode: 'embedded', target: document.getElementById('voiceflow-chat') },
+          assistant: { extensions: [AirtableFormExtension] }
+        });
+      }
+      v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs"; v.type = "text/javascript"; s.parentNode.insertBefore(v, s);
+  })(document, 'script');
+</script>
+</body>
+</html>
 
