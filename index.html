@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Assistant Interventions</title>
+  <title>Assistant Interventions - DIP ASCENSEURS</title>
 
   <style>
     * {
@@ -31,19 +31,20 @@
 
     main {
       flex: 1;
-      padding: 16px;
+      padding: 20px;
       display: flex;
       justify-content: center;
       align-items: center;
     }
 
+    /* Conteneur Responsive */
     .chat-container {
       width: 100%;
-      max-width: 420px;
-      height: 600px;
+      max-width: 1000px; /* Plus large sur PC */
+      height: 85vh;      /* Hauteur dynamique */
       background: white;
       border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
       position: relative;
       overflow: hidden;
     }
@@ -55,7 +56,21 @@
       color: #6b7280;
     }
 
-    /* Styles pour l'extension */
+    /* Adaptation Mobile */
+    @media (max-width: 768px) {
+      main {
+        padding: 0;
+      }
+      .chat-container {
+        height: 100%;
+        max-width: 100%;
+        border-radius: 0;
+      }
+      header {
+        font-size: 16px;
+      }
+    }
+
     .vfrc-extension-form {
       padding: 15px;
       background-color: #fff;
@@ -66,7 +81,7 @@
 <body>
 
   <header>
-    Assistant Interventions
+    Assistant Interventions - DIP ASCENSEURS
   </header>
 
   <main>
@@ -74,11 +89,11 @@
   </main>
 
   <footer>
-    Support technique · Interventions
+    Support technique · DIP Ascenseurs, Fermetures et Mobilité
   </footer>
 
 <script type="text/javascript">
-  // 1. Définition de l'extension Airtable
+  // Extension Airtable
   const AirtableFormExtension = {
     name: 'Airtable_Inspection_Form',
     type: 'response',
@@ -103,20 +118,20 @@
 
       const formContainer = document.createElement('div');
       formContainer.className = 'vfrc-extension-form';
-      formContainer.innerHTML = `<h4 style="margin-bottom:12px;">📝 Rapport de visite ${typeFiltre}</h4>`;
+      formContainer.innerHTML = `<h4 style="margin-bottom:12px; color:#0f172a;">📝 Rapport de visite ${typeFiltre}</h4>`;
 
       Object.keys(groups).forEach(groupName => {
         const groupDiv = document.createElement('div');
-        groupDiv.innerHTML = `<div style="font-weight:bold; color:#2e6ee1; margin: 10px 0 5px 0; font-size:0.9em;">${groupName}</div>`;
+        groupDiv.innerHTML = `<div style="font-weight:bold; color:#f59e0b; margin: 15px 0 8px 0; font-size:0.9em; text-transform:uppercase;">${groupName}</div>`;
         
         groups[groupName].forEach(control => {
           const item = document.createElement('div');
-          item.style = "background:#f9fafb; padding:8px; border-radius:6px; margin-bottom:6px; border: 1px solid #eee;";
+          item.style = "background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:8px; border: 1px solid #e2e8f0;";
           item.innerHTML = `
-            <div style="font-size:0.85em; margin-bottom:4px;">${control}</div>
-            <div style="display:flex; gap:15px;">
-              <label style="font-size:0.8em;"><input type="radio" name="${control}" value="C"> C</label>
-              <label style="font-size:0.8em;"><input type="radio" name="${control}" value="NC"> NC</label>
+            <div style="font-size:0.85em; margin-bottom:6px; color:#334155;">${control}</div>
+            <div style="display:flex; gap:20px;">
+              <label style="font-size:0.8em; cursor:pointer;"><input type="radio" name="${control}" value="C"> Conforme</label>
+              <label style="font-size:0.8em; cursor:pointer;"><input type="radio" name="${control}" value="NC"> Non conforme</label>
             </div>`;
           groupDiv.appendChild(item);
         });
@@ -124,12 +139,12 @@
       });
 
       const btn = document.createElement('button');
-      btn.innerText = "Soumettre le rapport";
-      btn.style = "background:#2e6ee1; color:white; border:none; padding:10px; width:100%; border-radius:6px; cursor:pointer; margin-top:10px; font-weight:600;";
+      btn.innerText = "Soumettre le rapport d'intervention";
+      btn.style = "background:#f59e0b; color:white; border:none; padding:12px; width:100%; border-radius:8px; cursor:pointer; margin-top:15px; font-weight:600;";
       
       btn.onclick = () => {
         btn.disabled = true;
-        btn.innerText = "Envoi...";
+        btn.innerText = "Envoi en cours...";
         window.voiceflow.chat.interact({ 
           type: 'complete', 
           payload: { status: 'Rapport envoyé', type: typeFiltre } 
@@ -141,7 +156,6 @@
     }
   };
 
-  // 2. Chargement du widget Voiceflow
   (function(d, t) {
       var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
       v.onload = function() {
