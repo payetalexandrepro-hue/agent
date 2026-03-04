@@ -4,26 +4,96 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Assistant Interventions - DIP ASCENSEURS</title>
+
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: #f5f6fa; min-height: 100vh; display: flex; flex-direction: column; }
-    header { background: #0f172a; color: white; padding: 14px 16px; text-align: center; font-size: 18px; font-weight: 600; }
-    main { flex: 1; padding: 20px; display: flex; justify-content: center; align-items: center; }
-    .chat-container { width: 100%; max-width: 1000px; height: 85vh; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
-    footer { text-align: center; padding: 10px; font-size: 12px; color: #6b7280; }
-    @media (max-width: 768px) {
-      main { padding: 0; }
-      .chat-container { height: 100%; max-width: 100%; border-radius: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-    .vfrc-extension-form { padding: 15px; background-color: #fff; max-height: 500px; overflow-y: auto; }
+
+    body {
+      background: #f5f6fa;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #0f172a;
+      color: white;
+      padding: 14px 16px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    main {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Conteneur Responsive */
+    .chat-container {
+      width: 100%;
+      max-width: 1000px; /* Plus large sur PC */
+      height: 85vh;      /* Hauteur dynamique */
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    footer {
+      text-align: center;
+      padding: 10px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    /* Adaptation Mobile */
+    @media (max-width: 768px) {
+      main {
+        padding: 0;
+      }
+      .chat-container {
+        height: 100%;
+        max-width: 100%;
+        border-radius: 0;
+      }
+      header {
+        font-size: 16px;
+      }
+    }
+
+    .vfrc-extension-form {
+      padding: 15px;
+      background-color: #fff;
+    }
   </style>
 </head>
+
 <body>
-  <header>Assistant Interventions - DIP ASCENSEURS</header>
-  <main><div class="chat-container" id="voiceflow-chat"></div></main>
-  <footer>Support technique · DIP Ascenseurs</footer>
+
+  <header>
+    Assistant Interventions - DIP ASCENSEURS
+  </header>
+
+  <main>
+    <div class="chat-container" id="voiceflow-chat"></div>
+  </main>
+
+  <footer>
+    Support technique · DIP Ascenseurs, Fermetures et Mobilité
+  </footer>
 
 <script type="text/javascript">
+  // Extension Airtable
   const AirtableFormExtension = {
     name: 'Airtable_Inspection_Form',
     type: 'response',
@@ -73,21 +143,11 @@
       btn.style = "background:#f59e0b; color:white; border:none; padding:12px; width:100%; border-radius:8px; cursor:pointer; margin-top:15px; font-weight:600;";
       
       btn.onclick = () => {
-        const results = {};
-        const selectedInputs = formContainer.querySelectorAll('input[type="radio"]:checked');
-        selectedInputs.forEach(input => {
-          results[input.name] = input.value;
-        });
-
         btn.disabled = true;
         btn.innerText = "Envoi en cours...";
-
         window.voiceflow.chat.interact({ 
           type: 'complete', 
-          payload: { 
-            message: "Rapport soumis", 
-            data: results 
-          } 
+          payload: { status: 'Rapport envoyé', type: typeFiltre } 
         });
       };
       
@@ -103,13 +163,18 @@
           verify: { projectID: '698e23a65b76a37297e3f819' },
           url: 'https://general-runtime.voiceflow.com',
           versionID: 'production',
-          render: { mode: 'embedded', target: document.getElementById('voiceflow-chat') },
-          assistant: { extensions: [AirtableFormExtension] }
+          render: {
+            mode: 'embedded',
+            target: document.getElementById('voiceflow-chat'),
+          },
+          assistant: {
+            extensions: [AirtableFormExtension]
+          }
         });
       }
       v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs"; v.type = "text/javascript"; s.parentNode.insertBefore(v, s);
   })(document, 'script');
 </script>
+
 </body>
 </html>
-
