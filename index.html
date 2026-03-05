@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Assistant Interventions - DIP ASCENSEURSV11</title>
+  <title>Assistant Interventions - DIP ASCENSEURS</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: #f5f6fa; min-height: 100vh; display: flex; flex-direction: column; }
@@ -11,33 +11,15 @@
     main { flex: 1; padding: 20px; display: flex; justify-content: center; align-items: center; }
     .chat-container { width: 100%; max-width: 1000px; height: 85vh; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
     footer { text-align: center; padding: 10px; font-size: 12px; color: #6b7280; }
-    @media (max-width: 768px) { main { padding: 0; } .chat-container { height: 100%; max-width: 100%; border-radius: 0; } }
-    
-    .vfrc-extension-form { padding: 15px; background-color: #fff; max-height: 550px; overflow-y: auto; width: 100%; }
-    .control-item { background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e2e8f0; width: 100%; }
-    
-    /* Correction : Alignement horizontal forcé */
-    .status-group { display: flex; flex-direction: row !important; gap: 10px; margin: 10px 0; width: 100%; }
-    .status-label { flex: 1; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-size: 0.9em; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; background: white; white-space: nowrap; }
-    
-    input[type="radio"] { display: none; }
-    
-    input[value="C"]:checked + .status-label { background: #dcfce7; border-color: #22c55e; color: #166534; font-weight: bold; }
-    input[value="C"]:checked + .status-label::before { content: "✓"; }
-    
-    input[value="NC"]:checked + .status-label { background: #fee2e2; border-color: #ef4444; color: #991b1b; font-weight: bold; }
-    input[value="NC"]:checked + .status-label::before { content: "✗"; }
-    
-    .extra-fields { margin-top: 12px; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid #e2e8f0; padding-top: 12px; width: 100%; }
-    .photo-section { display: flex; flex-direction: column; gap: 5px; width: 100%; }
-    .photo-text { font-size: 0.9em; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 5px; }
-    
-    /* Correction : Largeur totale pour le commentaire */
-    .extra-fields textarea { width: 100% !important; display: block; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; resize: none; min-height: 100px; }
+    @media (max-width: 768px) {
+      main { padding: 0; }
+      .chat-container { height: 100%; max-width: 100%; border-radius: 0; }
+    }
+    .vfrc-extension-form { padding: 15px; background-color: #fff; max-height: 500px; overflow-y: auto; }
   </style>
 </head>
 <body>
-  <header>Assistant Interventions - DIP ASCENSEURSV15</header>
+  <header>Assistant Interventions - DIP ASCENSEURS</header>
   <main><div class="chat-container" id="voiceflow-chat"></div></main>
   <footer>Support technique · DIP Ascenseurs</footer>
 
@@ -57,51 +39,56 @@
       });
       const data = await response.json();
 
+      const groups = data.records.reduce((acc, record) => {
+        const pt = record.fields.Point_de_contrôle || "Général";
+        if (!acc[pt]) acc[pt] = [];
+        acc[pt].push(record.fields.Contrôle);
+        return acc;
+      }, {});
+
       const formContainer = document.createElement('div');
       formContainer.className = 'vfrc-extension-form';
-      formContainer.innerHTML = `<h4 style="margin-bottom:15px; color:#0f172a;">📝 Rapport de visite ${typeFiltre}</h4>`;
+      formContainer.innerHTML = `<h4 style="margin-bottom:12px; color:#0f172a;">📝 Rapport de visite ${typeFiltre}</h4>`;
 
-      data.records.forEach(record => {
-        const control = record.fields.Contrôle;
-        const item = document.createElement('div');
-        item.className = 'control-item';
-        item.innerHTML = `
-          <div style="font-size:1em; font-weight:600; color:#1e293b; margin-bottom: 8px;">${control}</div>
-          <div class="status-group">
-            <label style="flex:1;">
-              <input type="radio" name="status-${control}" value="C">
-              <div class="status-label">Conforme</div>
-            </label>
-            <label style="flex:1;">
-              <input type="radio" name="status-${control}" value="NC">
-              <div class="status-label">Non conforme</div>
-            </label>
-          </div>
-          <div class="extra-fields">
-            <div class="photo-section">
-              <span class="photo-text">📷 Prendre une photo</span>
-              <input type="file" accept="image/*" capture="environment" id="photo-${control}" style="font-size: 0.8em; width: 100%;">
-            </div>
-            <textarea id="comm-${control}" placeholder="Décrivez l'état ou le problème rencontré..." rows="4"></textarea>
-          </div>`;
-        formContainer.appendChild(item);
+      Object.keys(groups).forEach(groupName => {
+        const groupDiv = document.createElement('div');
+        groupDiv.innerHTML = `<div style="font-weight:bold; color:#f59e0b; margin: 15px 0 8px 0; font-size:0.9em; text-transform:uppercase;">${groupName}</div>`;
+        
+        groups[groupName].forEach(control => {
+          const item = document.createElement('div');
+          item.style = "background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:8px; border: 1px solid #e2e8f0;";
+          item.innerHTML = `
+            <div style="font-size:0.85em; margin-bottom:6px; color:#334155;">${control}</div>
+            <div style="display:flex; gap:20px;">
+              <label style="font-size:0.8em; cursor:pointer;"><input type="radio" name="${control}" value="C"> Conforme</label>
+              <label style="font-size:0.8em; cursor:pointer;"><input type="radio" name="${control}" value="NC"> Non conforme</label>
+            </div>`;
+          groupDiv.appendChild(item);
+        });
+        formContainer.appendChild(groupDiv);
       });
 
       const btn = document.createElement('button');
-      btn.innerText = "Soumettre le rapport complet";
-      btn.style = "background:#f59e0b; color:white; border:none; padding:15px; width:100%; border-radius:8px; cursor:pointer; margin-top:10px; font-weight:700; font-size:1em;";
+      btn.innerText = "Soumettre le rapport d'intervention";
+      btn.style = "background:#f59e0b; color:white; border:none; padding:12px; width:100%; border-radius:8px; cursor:pointer; margin-top:15px; font-weight:600;";
       
       btn.onclick = () => {
-        const finalData = [];
-        data.records.forEach(record => {
-            const ctrl = record.fields.Contrôle;
-            const status = formContainer.querySelector(`input[name="status-${ctrl}"]:checked`)?.value || "Non renseigné";
-            const comment = document.getElementById(`comm-${ctrl}`).value;
-            finalData.push({ contrôle: ctrl, résultat: status, commentaire: comment });
+        const results = {};
+        const selectedInputs = formContainer.querySelectorAll('input[type="radio"]:checked');
+        selectedInputs.forEach(input => {
+          results[input.name] = input.value;
         });
+
         btn.disabled = true;
         btn.innerText = "Envoi en cours...";
-        window.voiceflow.chat.interact({ type: 'complete', payload: { data: finalData } });
+
+        window.voiceflow.chat.interact({ 
+          type: 'complete', 
+          payload: { 
+            message: "Rapport soumis", 
+            data: results 
+          } 
+        });
       };
       
       formContainer.appendChild(btn);
