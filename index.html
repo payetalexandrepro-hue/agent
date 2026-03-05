@@ -11,15 +11,35 @@
     main { flex: 1; padding: 20px; display: flex; justify-content: center; align-items: center; }
     .chat-container { width: 100%; max-width: 1000px; height: 85vh; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
     footer { text-align: center; padding: 10px; font-size: 12px; color: #6b7280; }
-    @media (max-width: 768px) {
-      main { padding: 0; }
-      .chat-container { height: 100%; max-width: 100%; border-radius: 0; }
-    }
-    .vfrc-extension-form { padding: 15px; background-color: #fff; max-height: 500px; overflow-y: auto; }
+    @media (max-width: 768px) { main { padding: 0; } .chat-container { height: 100%; max-width: 100%; border-radius: 0; } }
+    
+    .vfrc-extension-form { padding: 15px; background-color: #fff; max-height: 550px; overflow-y: auto; width: 100%; }
+    
+    /* Titre des catégories comme sur le site */
+    .category-title { color: #f59e0b; font-size: 0.85em; font-weight: bold; text-transform: uppercase; margin: 15px 0 10px 0; border-bottom: 1px solid #fef3c7; padding-bottom: 4px; }
+    
+    /* Container gris pour chaque point de contrôle */
+    .control-item { background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e2e8f0; width: 100%; }
+    
+    .control-label { font-size: 0.9em; font-weight: 500; color: #334155; margin-bottom: 10px; display: block; }
+
+    /* Alignement horizontal Conforme / Non conforme */
+    .status-group { display: flex; gap: 10px; margin: 8px 0; width: 100%; }
+    .status-label { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-size: 0.85em; display: flex; align-items: center; justify-content: center; gap: 6px; background: white; transition: 0.2s; }
+    
+    input[type="radio"] { display: none; }
+    
+    input[value="C"]:checked + .status-label { background: #dcfce7; border-color: #22c55e; color: #166534; font-weight: bold; }
+    input[value="NC"]:checked + .status-label { background: #fee2e2; border-color: #ef4444; color: #991b1b; font-weight: bold; }
+    
+    /* Section Photo et Commentaire */
+    .extra-fields { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; border-top: 1px dashed #cbd5e1; padding-top: 12px; }
+    .photo-text { font-size: 0.8em; font-weight: 600; color: #64748b; margin-bottom: 2px; display: block; }
+    .extra-fields textarea { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85em; resize: none; min-height: 60px; }
   </style>
 </head>
 <body>
-  <header>Assistant Interventions - DIP ASCENSEURS</header>
+  <header>Assistant Interventions - DIP ASCENSEURSV16</header>
   <main><div class="chat-container" id="voiceflow-chat"></div></main>
   <footer>Support technique · DIP Ascenseurs</footer>
 
@@ -39,56 +59,69 @@
       });
       const data = await response.json();
 
+      // Regroupement par "Point de contrôle" (Catégorie)
       const groups = data.records.reduce((acc, record) => {
-        const pt = record.fields.Point_de_contrôle || "Général";
-        if (!acc[pt]) acc[pt] = [];
-        acc[pt].push(record.fields.Contrôle);
+        const cat = record.fields.Point_de_contrôle || "AUTRES";
+        if (!acc[cat]) acc[cat] = [];
+        acc.push(record);
         return acc;
       }, {});
 
       const formContainer = document.createElement('div');
       formContainer.className = 'vfrc-extension-form';
-      formContainer.innerHTML = `<h4 style="margin-bottom:12px; color:#0f172a;">📝 Rapport de visite ${typeFiltre}</h4>`;
+      formContainer.innerHTML = `<h4 style="margin-bottom:10px; color:#0f172a;">📝 Rapport de visite ${typeFiltre}</h4>`;
 
-      Object.keys(groups).forEach(groupName => {
-        const groupDiv = document.createElement('div');
-        groupDiv.innerHTML = `<div style="font-weight:bold; color:#f59e0b; margin: 15px 0 8px 0; font-size:0.9em; text-transform:uppercase;">${groupName}</div>`;
-        
-        groups[groupName].forEach(control => {
+      // Tri et affichage par catégories
+      const categories = [...new Set(data.records.map(r => r.fields.Point_de_contrôle))];
+      
+      categories.forEach(cat => {
+        const catHeader = document.createElement('div');
+        catHeader.className = 'category-title';
+        catHeader.innerText = cat;
+        formContainer.appendChild(catHeader);
+
+        data.records.filter(r => r.fields.Point_de_contrôle === cat).forEach(record => {
+          const control = record.fields.Contrôle;
           const item = document.createElement('div');
-          item.style = "background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:8px; border: 1px solid #e2e8f0;";
+          item.className = 'control-item';
           item.innerHTML = `
-            <div style="font-size:0.85em; margin-bottom:6px; color:#334155;">${control}</div>
-            <div style="display:flex; gap:20px;">
-              <label style="font-size:0.8em; cursor:pointer;"><input type="radio" name="${control}" value="C"> Conforme</label>
-              <label style="font-size:0.8em; cursor:pointer;"><input type="radio" name="${control}" value="NC"> Non conforme</label>
+            <span class="control-label">${control}</span>
+            <div class="status-group">
+              <label style="flex:1;">
+                <input type="radio" name="status-${control}" value="C">
+                <div class="status-label">Conforme</div>
+              </label>
+              <label style="flex:1;">
+                <input type="radio" name="status-${control}" value="NC">
+                <div class="status-label">Non conforme</div>
+              </label>
+            </div>
+            <div class="extra-fields">
+              <div>
+                <span class="photo-text">📷 Prendre une photo</span>
+                <input type="file" accept="image/*" capture="environment" id="photo-${control}" style="font-size: 0.75em; width: 100%;">
+              </div>
+              <textarea id="comm-${control}" placeholder="Commentaire / Observations..." rows="2"></textarea>
             </div>`;
-          groupDiv.appendChild(item);
+          formContainer.appendChild(item);
         });
-        formContainer.appendChild(groupDiv);
       });
 
       const btn = document.createElement('button');
-      btn.innerText = "Soumettre le rapport d'intervention";
-      btn.style = "background:#f59e0b; color:white; border:none; padding:12px; width:100%; border-radius:8px; cursor:pointer; margin-top:15px; font-weight:600;";
+      btn.innerText = "Soumettre le rapport complet";
+      btn.style = "background:#f59e0b; color:white; border:none; padding:15px; width:100%; border-radius:8px; cursor:pointer; margin-top:10px; font-weight:700; font-size:1em;";
       
       btn.onclick = () => {
-        const results = {};
-        const selectedInputs = formContainer.querySelectorAll('input[type="radio"]:checked');
-        selectedInputs.forEach(input => {
-          results[input.name] = input.value;
+        const finalData = [];
+        data.records.forEach(record => {
+            const ctrl = record.fields.Contrôle;
+            const status = formContainer.querySelector(`input[name="status-${ctrl}"]:checked`)?.value || "Non renseigné";
+            const comment = document.getElementById(`comm-${ctrl}`).value;
+            finalData.push({ contrôle: ctrl, résultat: status, commentaire: comment });
         });
-
         btn.disabled = true;
         btn.innerText = "Envoi en cours...";
-
-        window.voiceflow.chat.interact({ 
-          type: 'complete', 
-          payload: { 
-            message: "Rapport soumis", 
-            data: results 
-          } 
-        });
+        window.voiceflow.chat.interact({ type: 'complete', payload: { data: finalData } });
       };
       
       formContainer.appendChild(btn);
