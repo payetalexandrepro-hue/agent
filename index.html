@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Assistant Interventions - DIP ASCENSEURSV11</title>
+  <title>Assistant Interventions - DIP ASCENSEURS</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: #f5f6fa; min-height: 100vh; display: flex; flex-direction: column; }
@@ -16,9 +16,10 @@
     .vfrc-extension-form { padding: 15px; background-color: #fff; max-height: 550px; overflow-y: auto; width: 100%; }
     .control-item { background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e2e8f0; width: 100%; }
     
-    /* Correction : Alignement horizontal forcé */
+    /* ALIGNEMENT HORIZONTAL DES BOUTONS */
     .status-group { display: flex; flex-direction: row !important; gap: 10px; margin: 10px 0; width: 100%; }
-    .status-label { flex: 1; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-size: 0.9em; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; background: white; white-space: nowrap; }
+    .status-option { flex: 1; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .status-label { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center; font-size: 0.9em; background: white; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px; }
     
     input[type="radio"] { display: none; }
     
@@ -30,14 +31,13 @@
     
     .extra-fields { margin-top: 12px; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid #e2e8f0; padding-top: 12px; width: 100%; }
     .photo-section { display: flex; flex-direction: column; gap: 5px; width: 100%; }
-    .photo-text { font-size: 0.9em; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 5px; }
     
-    /* Correction : Largeur totale pour le commentaire */
-    .extra-fields textarea { width: 100% !important; display: block; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; resize: none; min-height: 100px; }
+    /* CHAMP COMMENTAIRE TOUTE LARGEUR */
+    .extra-fields textarea { width: 100% !important; display: block; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; resize: none; min-height: 80px; }
   </style>
 </head>
 <body>
-  <header>Assistant Interventions - DIP ASCENSEURSV12</header>
+  <header>Assistant Interventions - DIP ASCENSEURSV13</header>
   <main><div class="chat-container" id="voiceflow-chat"></div></main>
   <footer>Support technique · DIP Ascenseurs</footer>
 
@@ -48,81 +48,4 @@
     match: ({ trace }) => trace.type === 'Airtable_Inspection_Form' || trace.payload?.name === 'Airtable_Inspection_Form',
     render: async ({ trace, element }) => {
       const typeFiltre = trace.payload?.type_visite || 'A';
-      const airtableToken = 'patRrGH5GsUnBaVyt.98a09846a0e564f6daea7c3586adb0b021b061c24e4dfd0096bd0c04f35a7af3';
-      const baseId = 'appelq7pZAQm5wBhi';
-      const tableId = 'tblFhCTVGZI3vAA02';
-
-      const response = await fetch(`https://api.airtable.com/v0/${baseId}/${tableId}?filterByFormula={Type_visite}='${typeFiltre}'`, {
-        headers: { Authorization: `Bearer ${airtableToken}` }
-      });
-      const data = await response.json();
-
-      const formContainer = document.createElement('div');
-      formContainer.className = 'vfrc-extension-form';
-      formContainer.innerHTML = `<h4 style="margin-bottom:15px; color:#0f172a;">📝 Rapport de visite ${typeFiltre}</h4>`;
-
-      data.records.forEach(record => {
-        const control = record.fields.Contrôle;
-        const item = document.createElement('div');
-        item.className = 'control-item';
-        item.innerHTML = `
-          <div style="font-size:1em; font-weight:600; color:#1e293b; margin-bottom: 8px;">${control}</div>
-          <div class="status-group">
-            <label style="flex:1;">
-              <input type="radio" name="status-${control}" value="C">
-              <div class="status-label">Conforme</div>
-            </label>
-            <label style="flex:1;">
-              <input type="radio" name="status-${control}" value="NC">
-              <div class="status-label">Non conforme</div>
-            </label>
-          </div>
-          <div class="extra-fields">
-            <div class="photo-section">
-              <span class="photo-text">📷 Prendre une photo</span>
-              <input type="file" accept="image/*" capture="environment" id="photo-${control}" style="font-size: 0.8em; width: 100%;">
-            </div>
-            <textarea id="comm-${control}" placeholder="Décrivez l'état ou le problème rencontré..." rows="4"></textarea>
-          </div>`;
-        formContainer.appendChild(item);
-      });
-
-      const btn = document.createElement('button');
-      btn.innerText = "Soumettre le rapport complet";
-      btn.style = "background:#f59e0b; color:white; border:none; padding:15px; width:100%; border-radius:8px; cursor:pointer; margin-top:10px; font-weight:700; font-size:1em;";
-      
-      btn.onclick = () => {
-        const finalData = [];
-        data.records.forEach(record => {
-            const ctrl = record.fields.Contrôle;
-            const status = formContainer.querySelector(`input[name="status-${ctrl}"]:checked`)?.value || "Non renseigné";
-            const comment = document.getElementById(`comm-${ctrl}`).value;
-            finalData.push({ contrôle: ctrl, résultat: status, commentaire: comment });
-        });
-        btn.disabled = true;
-        btn.innerText = "Envoi en cours...";
-        window.voiceflow.chat.interact({ type: 'complete', payload: { data: finalData } });
-      };
-      
-      formContainer.appendChild(btn);
-      element.appendChild(formContainer);
-    }
-  };
-
-  (function(d, t) {
-      var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
-      v.onload = function() {
-        window.voiceflow.chat.load({
-          verify: { projectID: '698e23a65b76a37297e3f819' },
-          url: 'https://general-runtime.voiceflow.com',
-          versionID: 'production',
-          render: { mode: 'embedded', target: document.getElementById('voiceflow-chat') },
-          assistant: { extensions: [AirtableFormExtension] }
-        });
-      }
-      v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs"; v.type = "text/javascript"; s.parentNode.insertBefore(v, s);
-  })(document, 'script');
-</script>
-</body>
-</html>
-
+      const airtableToken = 'patRrGH5
