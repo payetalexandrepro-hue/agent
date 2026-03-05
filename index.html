@@ -14,32 +14,27 @@
     @media (max-width: 768px) { main { padding: 0; } .chat-container { height: 100%; max-width: 100%; border-radius: 0; } }
     
     .vfrc-extension-form { padding: 15px; background-color: #fff; max-height: 550px; overflow-y: auto; width: 100%; }
-    
-    /* Titre des catégories comme sur le site */
-    .category-title { color: #f59e0b; font-size: 0.85em; font-weight: bold; text-transform: uppercase; margin: 15px 0 10px 0; border-bottom: 1px solid #fef3c7; padding-bottom: 4px; }
-    
-    /* Container gris pour chaque point de contrôle */
-    .control-item { background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e2e8f0; width: 100%; }
-    
-    .control-label { font-size: 0.9em; font-weight: 500; color: #334155; margin-bottom: 10px; display: block; }
+    .category-title { color: #f59e0b; font-size: 0.85em; font-weight: bold; text-transform: uppercase; margin: 20px 0 10px 0; border-bottom: 2px solid #fef3c7; padding-bottom: 5px; }
+    .control-item { background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #e2e8f0; width: 100%; }
+    .control-name { font-size: 0.95em; font-weight: 600; color: #1e293b; margin-bottom: 12px; display: block; }
 
-    /* Alignement horizontal Conforme / Non conforme */
-    .status-group { display: flex; gap: 10px; margin: 8px 0; width: 100%; }
-    .status-label { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-size: 0.85em; display: flex; align-items: center; justify-content: center; gap: 6px; background: white; transition: 0.2s; }
+    .status-group { display: flex; flex-direction: row !important; gap: 10px; margin-bottom: 15px; width: 100%; }
+    .status-label { flex: 1; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer; font-size: 0.9em; display: flex; align-items: center; justify-content: center; gap: 8px; background: white; transition: 0.2s; }
     
     input[type="radio"] { display: none; }
-    
     input[value="C"]:checked + .status-label { background: #dcfce7; border-color: #22c55e; color: #166534; font-weight: bold; }
+    input[value="C"]:checked + .status-label::before { content: "✓"; }
     input[value="NC"]:checked + .status-label { background: #fee2e2; border-color: #ef4444; color: #991b1b; font-weight: bold; }
+    input[value="NC"]:checked + .status-label::before { content: "✗"; }
     
-    /* Section Photo et Commentaire */
-    .extra-fields { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; border-top: 1px dashed #cbd5e1; padding-top: 12px; }
-    .photo-text { font-size: 0.8em; font-weight: 600; color: #64748b; margin-bottom: 2px; display: block; }
-    .extra-fields textarea { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85em; resize: none; min-height: 60px; }
+    .extra-fields { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid #e2e8f0; padding-top: 12px; width: 100%; }
+    .photo-section { display: flex; flex-direction: column; gap: 5px; width: 100%; }
+    .photo-text { font-size: 0.85em; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 5px; }
+    .extra-fields textarea { width: 100% !important; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9em; resize: none; min-height: 80px; }
   </style>
 </head>
 <body>
-  <header>Assistant Interventions - DIP ASCENSEURSV16</header>
+  <header>Assistant Interventions - DIP ASCENSEURSV17</header>
   <main><div class="chat-container" id="voiceflow-chat"></div></main>
   <footer>Support technique · DIP Ascenseurs</footer>
 
@@ -54,78 +49,66 @@
       const baseId = 'appelq7pZAQm5wBhi';
       const tableId = 'tblFhCTVGZI3vAA02';
 
-      const response = await fetch(`https://api.airtable.com/v0/${baseId}/${tableId}?filterByFormula={Type_visite}='${typeFiltre}'`, {
-        headers: { Authorization: `Bearer ${airtableToken}` }
-      });
-      const data = await response.json();
-
-      // Regroupement par "Point de contrôle" (Catégorie)
-      const groups = data.records.reduce((acc, record) => {
-        const cat = record.fields.Point_de_contrôle || "AUTRES";
-        if (!acc[cat]) acc[cat] = [];
-        acc.push(record);
-        return acc;
-      }, {});
-
-      const formContainer = document.createElement('div');
-      formContainer.className = 'vfrc-extension-form';
-      formContainer.innerHTML = `<h4 style="margin-bottom:10px; color:#0f172a;">📝 Rapport de visite ${typeFiltre}</h4>`;
-
-      // Tri et affichage par catégories
-      const categories = [...new Set(data.records.map(r => r.fields.Point_de_contrôle))];
-      
-      categories.forEach(cat => {
-        const catHeader = document.createElement('div');
-        catHeader.className = 'category-title';
-        catHeader.innerText = cat;
-        formContainer.appendChild(catHeader);
-
-        data.records.filter(r => r.fields.Point_de_contrôle === cat).forEach(record => {
-          const control = record.fields.Contrôle;
-          const item = document.createElement('div');
-          item.className = 'control-item';
-          item.innerHTML = `
-            <span class="control-label">${control}</span>
-            <div class="status-group">
-              <label style="flex:1;">
-                <input type="radio" name="status-${control}" value="C">
-                <div class="status-label">Conforme</div>
-              </label>
-              <label style="flex:1;">
-                <input type="radio" name="status-${control}" value="NC">
-                <div class="status-label">Non conforme</div>
-              </label>
-            </div>
-            <div class="extra-fields">
-              <div>
-                <span class="photo-text">📷 Prendre une photo</span>
-                <input type="file" accept="image/*" capture="environment" id="photo-${control}" style="font-size: 0.75em; width: 100%;">
-              </div>
-              <textarea id="comm-${control}" placeholder="Commentaire / Observations..." rows="2"></textarea>
-            </div>`;
-          formContainer.appendChild(item);
+      try {
+        const response = await fetch(`https://api.airtable.com/v0/${baseId}/${tableId}?filterByFormula={Type_visite}='${typeFiltre}'`, {
+          headers: { Authorization: `Bearer ${airtableToken}` }
         });
-      });
+        const data = await response.json();
 
-      const btn = document.createElement('button');
-      btn.innerText = "Soumettre le rapport complet";
-      btn.style = "background:#f59e0b; color:white; border:none; padding:15px; width:100%; border-radius:8px; cursor:pointer; margin-top:10px; font-weight:700; font-size:1em;";
-      
-      btn.onclick = () => {
-        const finalData = [];
-        data.records.forEach(record => {
+        const formContainer = document.createElement('div');
+        formContainer.className = 'vfrc-extension-form';
+        formContainer.innerHTML = `<h4 style="margin-bottom:15px; color:#0f172a;">📝 Rapport de visite ${typeFiltre}</h4>`;
+
+        // Regroupement par Point de contrôle (Catégorie)
+        const categories = [...new Set(data.records.map(r => r.fields.Point_de_contrôle))];
+        
+        categories.forEach(cat => {
+          const catDiv = document.createElement('div');
+          catDiv.className = 'category-title';
+          catDiv.innerText = cat || "Général";
+          formContainer.appendChild(catDiv);
+
+          data.records.filter(r => r.fields.Point_de_contrôle === cat).forEach(record => {
             const ctrl = record.fields.Contrôle;
-            const status = formContainer.querySelector(`input[name="status-${ctrl}"]:checked`)?.value || "Non renseigné";
-            const comment = document.getElementById(`comm-${ctrl}`).value;
-            finalData.push({ contrôle: ctrl, résultat: status, commentaire: comment });
+            const item = document.createElement('div');
+            item.className = 'control-item';
+            item.innerHTML = `
+              <span class="control-name">${ctrl}</span>
+              <div class="status-group">
+                <label style="flex:1;"><input type="radio" name="status-${ctrl}" value="C"><div class="status-label">Conforme</div></label>
+                <label style="flex:1;"><input type="radio" name="status-${ctrl}" value="NC"><div class="status-label">Non conforme</div></label>
+              </div>
+              <div class="extra-fields">
+                <div class="photo-section">
+                  <span class="photo-text">📷 Prendre une photo</span>
+                  <input type="file" accept="image/*" capture="environment" id="photo-${ctrl}" style="font-size: 0.8em; width: 100%;">
+                </div>
+                <textarea id="comm-${ctrl}" placeholder="Observations ou détails NC..." rows="3"></textarea>
+              </div>`;
+            formContainer.appendChild(item);
+          });
         });
-        btn.disabled = true;
-        btn.innerText = "Envoi en cours...";
-        window.voiceflow.chat.interact({ type: 'complete', payload: { data: finalData } });
-      };
-      
-      formContainer.appendChild(btn);
-      element.appendChild(formContainer);
+
+        const btn = document.createElement('button');
+        btn.innerText = "Soumettre le rapport complet";
+        btn.style = "background:#f59e0b; color:white; border:none; padding:16px; width:100%; border-radius:10px; cursor:pointer; margin-top:15px; font-weight:700; font-size:1em;";
+        
+        btn.onclick = () => {
+          const results = data.records.map(r => ({
+            contrôle: r.fields.Contrôle,
+            résultat: formContainer.querySelector(`input[name="status-${r.fields.Contrôle}"]:checked`)?.value || "NR",
+            commentaire: document.getElementById(`comm-${r.fields.Contrôle}`).value
+          }));
+          btn.disabled = true;
+          btn.innerText = "Envoi...";
+          window.voiceflow.chat.interact({ type: 'complete', payload: { data: results } });
+        };
+        
+        formContainer.appendChild(btn);
+        element.appendChild(formContainer);
+      } catch (e) {
+        console.error("Erreur Airtable:", e);
+      }
     }
   };
 
@@ -145,3 +128,4 @@
 </script>
 </body>
 </html>
+
