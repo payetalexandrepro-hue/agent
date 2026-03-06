@@ -11,15 +11,27 @@
     main { flex: 1; padding: 20px; display: flex; justify-content: center; align-items: center; }
     .chat-container { width: 100%; max-width: 1000px; height: 85vh; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
     footer { text-align: center; padding: 10px; font-size: 12px; color: #6b7280; }
-    @media (max-width: 768px) {
-      main { padding: 0; }
-      .chat-container { height: 100%; max-width: 100%; border-radius: 0; }
-    }
-    .vfrc-extension-form { padding: 15px; background-color: #fff; max-height: 500px; overflow-y: auto; }
+    @media (max-width: 768px) { main { padding: 0; } .chat-container { height: 100%; max-width: 100%; border-radius: 0; } }
+    
+    .vfrc-extension-form { padding: 15px; background-color: #fff; max-height: 550px; overflow-y: auto; width: 100%; }
+    .group-title { font-weight: bold; color: #f59e0b; margin: 20px 0 10px 0; font-size: 0.9em; text-transform: uppercase; border-bottom: 2px solid #fef3c7; padding-bottom: 5px; }
+    .control-item { background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #e2e8f0; width: 100%; }
+    .control-name { font-size: 0.95em; font-weight: 600; color: #1e293b; margin-bottom: 12px; display: block; }
+
+    .status-group { display: flex; flex-direction: row !important; gap: 10px; margin-bottom: 15px; width: 100%; }
+    .status-label { flex: 1; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer; font-size: 0.9em; display: flex; align-items: center; justify-content: center; gap: 8px; background: white; transition: 0.2s; }
+    
+    input[type="radio"] { display: none; }
+    input[value="C"]:checked + .status-label { background: #dcfce7; border-color: #22c55e; color: #166534; font-weight: bold; }
+    input[value="NC"]:checked + .status-label { background: #fee2e2; border-color: #ef4444; color: #991b1b; font-weight: bold; }
+    
+    .extra-fields { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid #e2e8f0; padding-top: 12px; width: 100%; }
+    .photo-text { font-size: 0.85em; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+    .extra-fields textarea { width: 100% !important; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9em; resize: none; min-height: 80px; }
   </style>
 </head>
 <body>
-  <header>Assistant Interventions - DIP ASCENSEURSV20</header>
+  <header>Assistant Interventions - DIP ASCENSEURSV21</header>
   <main><div class="chat-container" id="voiceflow-chat"></div></main>
   <footer>Support technique · DIP Ascenseurs</footer>
 
@@ -42,94 +54,22 @@
       const groups = data.records.reduce((acc, record) => {
         const pt = record.fields.Point_de_contrôle || "Général";
         if (!acc[pt]) acc[pt] = [];
-        acc[pt].push(record.fields.Contrôle);
+        acc[pt].push(record);
         return acc;
       }, {});
 
       const formContainer = document.createElement('div');
       formContainer.className = 'vfrc-extension-form';
-      formContainer.innerHTML = `<h4 style="margin-bottom:12px; color:#0f172a;">📝 Rapport de visite ${typeFiltre}</h4>`;
+      formContainer.innerHTML = `<h4 style="margin-bottom:15px; color:#0f172a;">📝 Rapport de visite ${typeFiltre}</h4>`;
 
-Object.keys(groups).forEach(groupName => {
-  const groupDiv = document.createElement('div');
-  groupDiv.innerHTML = `<div style="font-weight:bold; color:#f59e0b; margin: 15px 0 8px 0; font-size:0.9em; text-transform:uppercase;">${groupName}</div>`;
+      Object.keys(groups).forEach(groupName => {
+        const groupDiv = document.createElement('div');
+        groupDiv.innerHTML = `<div class="group-title">${groupName}</div>`;
 
-  groups[groupName].forEach(control => {
-    const item = document.createElement('div');
-    item.style = "background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:8px; border: 1px solid #e2e8f0;";
-    item.innerHTML = `
-      <div style="font-size:0.85em; margin-bottom:6px; color:#334155; font-weight:600;">${control}</div>
-      <div style="display:flex; gap:20px; margin-bottom:10px;">
-        <label style="font-size:0.8em; cursor:pointer;"><input type="radio" name="status-${control}" value="C"> Conforme</label>
-        <label style="font-size:0.8em; cursor:pointer;"><input type="radio" name="status-${control}" value="NC"> Non conforme</label>
-      </div>
-      <div style="margin-top:10px; padding-top:10px; border-top: 1px solid #e2e8f0; display:flex; flex-direction:column; gap:8px;">
-        <div>
-          <span style="font-size:0.8em; font-weight:600; color:#475569; display:block; margin-bottom:4px;">📷 Prendre une photo</span>
-          <input type="file" accept="image/*" capture="environment" id="photo-${control}" style="font-size:0.75em; width:100%;">
-        </div>
-        <textarea id="comm-${control}" placeholder="Observations..." rows="2" style="width:100%; padding:6px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.8em; resize:none;"></textarea>
-      </div>`;
-    groupDiv.appendChild(item);
-  });
-  formContainer.appendChild(groupDiv);
-});
-
-      btn.onclick = () => {
-  // 1. Création de l'objet qui contiendra toutes les données
-  const formData = {};
-
-  // 2. On parcourt tous les records Airtable pour récupérer les saisies
-  data.records.forEach(record => {
-    const ctrl = record.fields.Contrôle;
-    
-    // Récupération de la valeur du bouton radio (C ou NC)
-    const status = formContainer.querySelector(`input[name="status-${ctrl}"]:checked`)?.value || "Non renseigné";
-    
-    // Récupération du texte du commentaire
-    const comment = document.getElementById(`comm-${ctrl}`).value;
-    
-    // Récupération de la photo (nom du fichier)
-    const photoInput = document.getElementById(`photo-${ctrl}`);
-    const photoName = photoInput.files.length > 0 ? photoInput.files[0].name : "Pas de photo";
-
-    // On stocke tout dans formData pour ce contrôle précis
-    formData[ctrl] = {
-      resultat: status,
-      commentaire: comment,
-      photo: photoName
-    };
-  });
-
-  btn.disabled = true;
-  btn.innerText = "Envoi en cours...";
-
-  // 3. Envoi dynamique vers Voiceflow via le payload
-  window.voiceflow.chat.interact({
-    type: 'complete',
-    payload: formData // C'est ici que les données sont transmises
-  });
-};
-
-      
-      formContainer.appendChild(btn);
-      element.appendChild(formContainer);
-    }
-  };
-
-  (function(d, t) {
-      var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
-      v.onload = function() {
-        window.voiceflow.chat.load({
-          verify: { projectID: '698e23a65b76a37297e3f819' },
-          url: 'https://general-runtime.voiceflow.com',
-          versionID: 'production',
-          render: { mode: 'embedded', target: document.getElementById('voiceflow-chat') },
-          assistant: { extensions: [AirtableFormExtension] }
-        });
-      }
-      v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs"; v.type = "text/javascript"; s.parentNode.insertBefore(v, s);
-  })(document, 'script');
-</script>
-</body>
-</html>
+        groups[groupName].forEach(record => {
+          const ctrl = record.fields.Contrôle;
+          const item = document.createElement('div');
+          item.className = 'control-item';
+          item.innerHTML = `
+            <span class="control-name">${ctrl}</span>
+            <div class="status-group">
