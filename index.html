@@ -19,7 +19,7 @@
   </style>
 </head>
 <body>
-  <header>Assistant Interventions - DIP ASCENSEURSV22</header>
+  <header>Assistant Interventions - DIP ASCENSEURSV23</header>
   <main><div class="chat-container" id="voiceflow-chat"></div></main>
   <footer>Support technique · DIP Ascenseurs</footer>
 
@@ -29,17 +29,12 @@
     type: 'response',
     match: ({ trace }) => trace.type === 'Airtable_Inspection_Form' || trace.payload?.name === 'Airtable_Inspection_Form',
     render: async ({ trace, element }) => {
+      // RÉCUPÉRATION SÉCURISÉE : On utilise les données envoyées par l'API Voiceflow
+      const airtableRecords = trace.payload?.airtable_data || [];
       const typeFiltre = trace.payload?.type_visite || 'A';
-      const airtableToken = 'patRrGH5GsUnBaVyt.98a09846a0e564f6daea7c3586adb0b021b061c24e4dfd0096bd0c04f35a7af3';
-      const baseId = 'appelq7pZAQm5wBhi';
-      const tableId = 'tblFhCTVGZI3vAA02';
 
-      const response = await fetch(`https://api.airtable.com/v0/${baseId}/${tableId}?filterByFormula={Type_visite}='${typeFiltre}'`, {
-        headers: { Authorization: `Bearer ${airtableToken}` }
-      });
-      const data = await response.json();
-
-      const groups = data.records.reduce((acc, record) => {
+      // Groupement par catégorie (Point de contrôle)
+      const groups = airtableRecords.reduce((acc, record) => {
         const pt = record.fields.Point_de_contrôle || "Général";
         if (!acc[pt]) acc[pt] = [];
         acc[pt].push(record.fields.Contrôle);
@@ -50,50 +45,68 @@
       formContainer.className = 'vfrc-extension-form';
       formContainer.innerHTML = `<h4 style="margin-bottom:12px; color:#0f172a;">📝 Rapport de visite ${typeFiltre}</h4>`;
 
-Object.keys(groups).forEach(groupName => {
-  const groupDiv = document.createElement('div');
-  groupDiv.innerHTML = `<div style="font-weight:bold; color:#f59e0b; margin: 15px 0 8px 0; font-size:0.9em; text-transform:uppercase;">${groupName}</div>`;
+      Object.keys(groups).forEach(groupName => {
+        const groupDiv = document.createElement('div');
+        groupDiv.innerHTML = `<div style="font-weight:bold; color:#f59e0b; margin: 15px 0 8px 0; font-size:0.9em; text-transform:uppercase;">${groupName}</div>`;
 
-  groups[groupName].forEach(control => {
-    const item = document.createElement('div');
-    item.style = "background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:8px; border: 1px solid #e2e8f0;";
-    item.innerHTML = `
-      <div style="font-size:0.85em; margin-bottom:6px; color:#334155; font-weight:600;">${control}</div>
-      <div style="display:flex; gap:20px; margin-bottom:10px;">
-        <label style="font-size:0.8em; cursor:pointer;"><input type="radio" name="status-${control}" value="C"> Conforme</label>
-        <label style="font-size:0.8em; cursor:pointer;"><input type="radio" name="status-${control}" value="NC"> Non conforme</label>
-      </div>
-      <div style="margin-top:10px; padding-top:10px; border-top: 1px solid #e2e8f0; display:flex; flex-direction:column; gap:8px;">
-        <div>
-          <span style="font-size:0.8em; font-weight:600; color:#475569; display:block; margin-bottom:4px;">📷 Prendre une photo</span>
-          <input type="file" accept="image/*" capture="environment" id="photo-${control}" style="font-size:0.75em; width:100%;">
-        </div>
-        <textarea id="comm-${control}" placeholder="Observations..." rows="2" style="width:100%; padding:6px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.8em; resize:none;"></textarea>
-      </div>`;
-    groupDiv.appendChild(item);
-  });
-  formContainer.appendChild(groupDiv);
-});
+        groups[groupName].forEach(control => {
+          const item = document.createElement('div');
+          item.style = "background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:8px; border: 1px solid #e2e8f0;";
+          item.innerHTML = `
+            <div style="font-size:0.85em; margin-bottom:6px; color:#334155; font-weight:600;">${control}</div>
+            <div style="display:flex; gap:20px; margin-bottom:10px;">
+              <label style="font-size:0.8em; cursor:pointer;"><input type="radio" name="status-${control}" value="C"> Conforme</label>
+              <label style="font-size:0.8em; cursor:pointer;"><input type="radio" name="status-${control}" value="NC"> Non conforme</label>
+            </div>
+            <div style="margin-top:10px; padding-top:10px; border-top: 1px solid #e2e8f0; display:flex; flex-direction:column; gap:8px;">
+              <div>
+                <span style="font-size:0.8em; font-weight:600; color:#475569; display:block; margin-bottom:4px;">📷 Prendre une photo</span>
+                <input type="file" accept="image/*" capture="environment" id="photo-${control}" style="font-size:0.75em; width:100%;">
+              </div>
+              <textarea id="comm-${control}" placeholder="Observations..." rows="2" style="width:100%; padding:6px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.8em; resize:none;"></textarea>
+            </div>`;
+          groupDiv.appendChild(item);
+        });
+        formContainer.appendChild(groupDiv);
+      });
 
       const btn = document.createElement('button');
       btn.innerText = "Soumettre le rapport d'intervention";
       btn.style = "background:#f59e0b; color:white; border:none; padding:12px; width:100%; border-radius:8px; cursor:pointer; margin-top:15px; font-weight:600;";
       
       btn.onclick = () => {
-        const results = {};
-        const selectedInputs = formContainer.querySelectorAll('input[type="radio"]:checked');
-        selectedInputs.forEach(input => {
-          results[input.name] = input.value;
-        });
-
         btn.disabled = true;
         btn.innerText = "Envoi en cours...";
 
+        const formData = {};
+
+        // On boucle sur les contrôles initiaux pour construire le payload complet
+        airtableRecords.forEach(record => {
+          const ctrl = record.fields.Contrôle;
+          
+          // Récupération Status
+          const radio = formContainer.querySelector(`input[name="status-${ctrl}"]:checked`);
+          const statusValue = radio ? radio.value : "NR";
+
+          // Récupération Commentaire
+          const commentValue = document.getElementById(`comm-${ctrl}`).value;
+
+          // Récupération Photo (nom du fichier)
+          const photoInput = document.getElementById(`photo-${ctrl}`);
+          const photoName = photoInput.files.length > 0 ? photoInput.files[0].name : "Pas de photo";
+
+          formData[ctrl] = {
+            resultat: statusValue,
+            commentaire: commentValue,
+            photo: photoName
+          };
+        });
+
+        // Envoi des données structurées à Voiceflow
         window.voiceflow.chat.interact({ 
           type: 'complete', 
           payload: { 
-            message: "Rapport soumis", 
-            data: results 
+            data: formData 
           } 
         });
       };
@@ -119,3 +132,4 @@ Object.keys(groups).forEach(groupName => {
 </script>
 </body>
 </html>
+
