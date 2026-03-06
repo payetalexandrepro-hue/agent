@@ -19,7 +19,7 @@
   </style>
 </head>
 <body>
-  <header>Assistant Interventions - DIP ASCENSEURSV19</header>
+  <header>Assistant Interventions - DIP ASCENSEURSV20</header>
   <main><div class="chat-container" id="voiceflow-chat"></div></main>
   <footer>Support technique · DIP Ascenseurs</footer>
 
@@ -75,28 +75,42 @@ Object.keys(groups).forEach(groupName => {
   formContainer.appendChild(groupDiv);
 });
 
-      const btn = document.createElement('button');
-      btn.innerText = "Soumettre le rapport d'intervention";
-      btn.style = "background:#f59e0b; color:white; border:none; padding:12px; width:100%; border-radius:8px; cursor:pointer; margin-top:15px; font-weight:600;";
-      
       btn.onclick = () => {
-        const results = {};
-        const selectedInputs = formContainer.querySelectorAll('input[type="radio"]:checked');
-        selectedInputs.forEach(input => {
-          results[input.name] = input.value;
-        });
+  // 1. Création de l'objet qui contiendra toutes les données
+  const formData = {};
 
-        btn.disabled = true;
-        btn.innerText = "Envoi en cours...";
+  // 2. On parcourt tous les records Airtable pour récupérer les saisies
+  data.records.forEach(record => {
+    const ctrl = record.fields.Contrôle;
+    
+    // Récupération de la valeur du bouton radio (C ou NC)
+    const status = formContainer.querySelector(`input[name="status-${ctrl}"]:checked`)?.value || "Non renseigné";
+    
+    // Récupération du texte du commentaire
+    const comment = document.getElementById(`comm-${ctrl}`).value;
+    
+    // Récupération de la photo (nom du fichier)
+    const photoInput = document.getElementById(`photo-${ctrl}`);
+    const photoName = photoInput.files.length > 0 ? photoInput.files[0].name : "Pas de photo";
 
-        window.voiceflow.chat.interact({ 
-          type: 'complete', 
-          payload: { 
-            message: "Rapport soumis", 
-            data: results 
-          } 
-        });
-      };
+    // On stocke tout dans formData pour ce contrôle précis
+    formData[ctrl] = {
+      resultat: status,
+      commentaire: comment,
+      photo: photoName
+    };
+  });
+
+  btn.disabled = true;
+  btn.innerText = "Envoi en cours...";
+
+  // 3. Envoi dynamique vers Voiceflow via le payload
+  window.voiceflow.chat.interact({
+    type: 'complete',
+    payload: formData // C'est ici que les données sont transmises
+  });
+};
+
       
       formContainer.appendChild(btn);
       element.appendChild(formContainer);
