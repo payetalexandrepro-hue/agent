@@ -19,7 +19,7 @@
   </style>
 </head>
 <body>
-  <header>Assistant Interventions - DIP ASCENSEURSV24</header>
+  <header>Assistant Interventions - DIP ASCENSEURSV25</header>
   <main><div class="chat-container" id="voiceflow-chat"></div></main>
   <footer>Support technique · DIP Ascenseurs</footer>
 
@@ -32,7 +32,7 @@
       // RÉCUPÉRATION SÉCURISÉE : On utilise les données envoyées par l'API Voiceflow
       console.log("Données reçues de Voiceflow:", trace.payload);
       const airtableRecords = trace.payload?.airtable_data || [];
-      const typeFiltre = trace.payload?.type_visite || 'A';
+      const typeFiltre = trace.payload?.Type_visite_selectionnee || 'A';
 
       // Groupement par catégorie (Point de contrôle)
       const groups = airtableRecords.reduce((acc, record) => {
